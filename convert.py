@@ -22,7 +22,7 @@ category_mapping = {
 def convert():
     print(f"Скачиваю файл: {SOURCE_YML_URL}...")
     req = urllib.request.Request(SOURCE_YML_URL, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as response:
+    with urllib.request.urlopen(req, timeout=30) as response:
         yml_content = response.read()
 
     root = ET.fromstring(yml_content)
