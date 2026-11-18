@@ -2,10 +2,11 @@ import urllib.request
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 
-# Ссылка на ваш YML в Тильде
+# --- НАСТРОЙКИ ---
 SOURCE_YML_URL = "http://ove.moscow/tstore/yml/046650b78c58ce90db5a20fe923eb24b.yml"
 OUTPUT_XML_FILE = "pinterest_feed.xml"
 
+# Сопоставление категорий Тильды с таксономией Google Product Category
 category_mapping = {
     "480020645053": "Apparel & Accessories > Clothing > Shirts & Tops",
     "752268862133": "Apparel & Accessories > Clothing > Outerwear",
@@ -21,9 +22,23 @@ category_mapping = {
 
 def convert():
     print(f"Скачиваю файл: {SOURCE_YML_URL}...")
-    req = urllib.request.Request(SOURCE_YML_URL, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req, timeout=30) as response:
-        yml_content = response.read()
+    
+    # --- ИСПРАВЛЕНИЕ: Добавляем заголовки, чтобы Tilda/Cloudflare не блокировали запрос ---
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+    }
+    req = urllib.request.Request(SOURCE_YML_URL, headers=headers)
+    
+    try:
+        # Таймаут на всякий случай увеличен до 60 секунд
+        with urllib.request.urlopen(req, timeout=60) as response:
+            yml_content = response.read()
+    except Exception as e:
+        print(f"❌ Ошибка при скачивании: {e}")
+        # Если скачать не удалось, скрипт завершится с ошибкой, чтобы GitHub это показал
+        raise e
 
     root = ET.fromstring(yml_content)
 
@@ -90,7 +105,7 @@ def convert():
     with open(OUTPUT_XML_FILE, "w", encoding="utf-8") as f:
         f.write(pretty_xml)
 
-    print(f"ГОТОВО! Файл {OUTPUT_XML_FILE} создан.")
+    print(f"🎉 ГОТОВО! Файл {OUTPUT_XML_FILE} создан.")
 
 if __name__ == "__main__":
     convert()
